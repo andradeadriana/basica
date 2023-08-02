@@ -1,0 +1,364 @@
+---
+title: "Palavras sobre a RURAL"
+author: "Prof. Adriana Andrade" 
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: column
+    vertical_layout: scroll
+    #orientation: columns  # ou rows
+    #vertical_layout: fill  # ou scroll
+    #logo: logo01.png
+    #favicon: rural_logo4.jpg
+---
+
+
+```{r, eval=F}
+#Logo
+#out.width = "100px"
+knitr::include_graphics("logo01.png")
+
+```
+
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+
+
+#Packages
+library(flexdashboard)
+library(wordcloud)
+library(wordcloud2)
+library(ggplot2)
+library(plotly)
+library(tidyverse)
+library(tidytext)
+library(stringr)
+library(DT)
+library(kableExtra)
+
+```
+# Overview{.sidebar}
+Esses resultados foram produzidos a partir da Pesquisa Perfil dos alunos 1/2023 realizada com as turmas da prof. Adriana Andrade. Os dados foram tabulados no software R.
+
+# Nuvem de palavras{data-navmenu="Nuvem"}
+## Column 1 {data-widht=100} 
+### Nuvem de palavras
+
+O gráfico apresenta as palavras mencionadas pelos alunos na pergunta o que você pensa quando se fala na Rural.
+
+```{r preprocessamento, include=FALSE}
+#Leitura da Base
+
+setwd("G:\\Meu Drive\\_UFRRJ\\2023_1SEM\\Analise_Palavras\\basica")
+basica<-read.csv("basica.csv")
+
+#=======================================
+#Pre-Processamento
+#=======================================
+
+#Colocar texto em tolwer
+#Remover pontuação
+#Remover espaços em branco
+
+
+palavra.basica<-data.frame(palavra=basica$palavra)%>% 
+  mutate(palavra=tolower(palavra)) %>% 
+  mutate(palavra=str_replace_all(palavra,"[[:punct:]]",""))
+  
+#Remover stopwords  
+stopword<-tibble(palavra=c("de", "a", "o", "que", "e", "do", "da", "em", "um", "para", "é", "com", "não", "uma", "os", "no", "se", "na", "por", "mais", "as", "dos", "como", "mas", "foi", "ao", "ele", "das", "tem", "à", "seu", "sua", "ou", "ser", "quando","com", "muito", "há", "nos", "já", "está", "eu", "também", "só", "pelo", "pela", "até", "isso", "ela", "entre", "era", "depois", "sem", "mesmo", "aos", "ter", "seus", "quem", "nas", "me", "esse", "desse", "dessa", "eles", "estão", "você", "tinha", "foram", "essa", "num", "nem", "suas", "meu", "às", "minha", "têm", "numa", "pelos", "elas", "havia", "seja", "qual", "será", "nós", "tenho", "lhe", "deles", "essas", "esses", "pelas", "este", "fosse", "dele", "tu", "te", "vocês", "vos", "lhes", "meus", "minhas", "teu", "tua", "teus", "tuas", "nosso", "nossa", "nossos", "nossas", "dela", "delas", "esta", "este","estes", "estas", "aquele", "aquela", "aqueles", "aquelas", "isto", "aquilo", "estou", "está", "estamos", "estão", "estive", "esteve", "estivemos", "estiveram", "estava", "estávamos", "estavam", "estivera", "estivéramos", "esteja", "estejamos", "estejam", "estivesse", "estivéssemos", "estivessem", "estiver", "estivermos", "estiverem", "hei", "há", "havemos", "hão", "houve", "houvemos", "houveram", "houvera", "houvéramos", "haja", "hajamos", "hajam", "houvesse", "houvéssemos", "houvessem", "houver", "houvermos", "houverem", "houverei", "houverá", "houveremos", "houverão", "houveria", "houveríamos", "houveriam", "sou", "somos", "são", "era", "éramos", "eram", "fui", "foi", "fomos", "foram", "fora", "fôramos", "seja", "sejamos", "sejam", "fosse", "fôssemos", "fossem", "for", "formos", "forem", "serei", "será", "seremos", "serão", "seria", "seríamos", "seriam", "tenho", "tem", "temos", "tém", "tinha", "tínhamos", "tinham", "tive", "teve", "tivemos", "tiveram", "tivera", "tivéramos", "tenha", "tenhamos", "tenham", "tivesse", "tivéssemos", "tivessem", "tiver", "tivermos", "tiverem", "terei", "terá", "teremos", "terão", "teria", "teríamos", "teriam","sobre","partir", "desde","deste","algum","alguns","alguma","algumas"))
+
+
+## Junção de arquivos para remoção de stopwords
+
+palavra.basica<- anti_join(palavra.basica,stopword, by="palavra")
+
+```
+
+
+```{r nuvem}
+#Dado com contagem para wordcloud
+
+wordcloud_basica <- palavra.basica%>%
+  count(palavra, sort = TRUE) 
+
+# 
+# wordcloud(words=wordcloud_basica$palavra,
+#           freq = wordcloud_basica$n,
+#           min.freq = 1,
+#           scale=c(4,.2)
+#           )
+
+
+wordcloud2(wordcloud_basica,
+           shape = "circle",
+           size=.5,
+            minRotation = -pi/6, 
+  rotateRatio = 1)
+
+
+```
+
+# Top10{data-navmenu="Top 10"}
+## Column 2 {data-width=300}{.tabset}
+### Percentil 90
+
+O gráfico apresenta o *top 10 high* com as 10 palavras mais citadas.
+
+```{r top Bom }
+
+palavra.basica %>% 
+  count(palavra,sort = TRUE) %>% 
+  mutate(palavra=reorder(palavra,n)) %>% 
+  slice_head(n=10) %>% 
+  ggplot()+
+  geom_col(aes(x=n,y=palavra), col="green", fill="green")+
+  labs(y="Palavra",
+       x="n",
+       title = "Top 10 - Palavras mais mencionadas")+
+  theme(
+  axis.text = element_text(size = 12),   # Font size for axis tick labels
+  axis.title = element_text(size = 14)   # Font size for axis titles
+)
+
+
+
+```
+
+### Percentil 10
+
+A tabela apresenta o *top 10 down* com as 10 palavras menos citadas. Cada uma foi mencionada uma única vez.
+```{r top Ruim}
+palavra.basica %>% 
+  count(palavra,sort = TRUE) %>% 
+  mutate(palavra=reorder(palavra,n)) %>% 
+  slice_tail(n=10) %>%
+  kable() %>% 
+  kable_paper(bootstrap_options = "striped", full_width = F)
+  
+  
+
+
+```
+
+
+# Sentimento{data-navmenu="Análise de Sentimento"}
+## Column 3{data-width=250}{.tabset}
+
+Foi selecionada uma amostra de 54 palavras que foram submetidas à análise de sentimento. Cada uma foi classificada de acordo com o sentimento vinculado à palavra: positivo, neturo ou negativo. Foi utilizado o dicionário do pacote LexiconPT.
+
+```{r lista, eval=FALSE}
+wordcloud_basica %>% 
+  kable() %>% 
+  kable_paper(bootstrap_options = "striped", full_width = F)
+  
+```
+
+
+```{r DT, eval=FALSE}
+datatable(wordcloud_basica, 
+          options = list(
+  columnDefs = list(list(className = 'dt-center', targets = 5)),
+  pageLength = 5,
+  lengthMenu = c(5, 10, 15, 20)))
+```
+
+```{r lexicon, include=FALSE}
+#PACOTE LEXICONPT
+
+# 1. Chamar o pacote lexiconPT
+library(lexiconPT)
+# 2. Guardando o dicionário de sentimentos num objeto
+dicionario_oplexicon<-oplexicon_v3.0
+
+# 3. Fazer um inner-join da base tokenizada com o dicionário de sentimentos
+
+palavara280_sentimento_OP <- left_join(palavra.basica,
+                     dicionario_oplexicon[, c("term", "polarity")],
+                     by = c("palavra" = "term"))
+
+# 4. Contagem das palavras classificadas
+
+#sum(!is.na(palavara814_sentimento_OP$polarity)) #apenas 26
+#table(palavara814_sentimento_OP$polarity)
+
+```
+
+```{r syuzhet, include=FALSE}
+
+#PACOTE SYUZHET
+
+library(syuzhet)
+
+# 1. Traduzindo classificadores da base
+dicionario_nrc<-get_sentiment_dictionary(dictionary = "nrc",language="portuguese") %>% 
+  mutate(sent1=recode(sentiment,
+                      `positive`="positivo",
+                      `negative`="negativo",
+                      `anger` = "negativo",
+                      `disgust` = "negativo",
+                      `fear` = "negativo",
+                      `sadness` = "negativo",
+                      `joy` = "positivo",
+                      `surprise` = "positivo",
+                      `trust` = "positivo",
+                      `anticipation` = "neutro")) %>% 
+  distinct(word, .keep_all = TRUE) %>% 
+  mutate(polaridade=recode(sent1,
+                         `positivo`=1,
+                         `negativo`=-1,
+                         `neutro`=0))
+
+
+# Faz a junção por interseção.
+palavra280_sentimento_Syu <- left_join(palavra.basica,
+                     dicionario_nrc,
+                     by = c("palavra"="word"))
+
+#summary(palavra814_sentimento_Syu$polaridade)
+#table(palavra814_sentimento_Syu$polaridade)
+#Classificou 56 palavras: 46% 
+
+```
+
+```{r errado, include=FALSE}
+
+#==========DEU MUITO RUIM SÓ CLASSIFICOU 7?????
+
+
+#Junção dos dicionários
+#Vou utilizar como base o dicionário oplexicon
+
+dicionariox_oplexicon<-dicionario_oplexicon
+dicionariox_nrc<-dicionario_nrc
+
+dicionariox_oplexicon$dic<-"Oplexicon"
+dicionariox_nrc$dic<-"nrc"
+
+dicionariox_oplexicon<-dicionariox_oplexicon %>% 
+  rename(word=term) %>% 
+  rename(polaridade=polarity) %>% 
+  select(word,polaridade,dic) %>%  mutate(sentimento=recode(polaridade,
+                           `-1`="negativo",
+                           `1`="positivo",
+                           `0`="neutro"))
+
+dicionariox_nrc <- dicionariox_nrc %>% 
+  rename(sentimento=sentiment) %>% 
+    select(word,polaridade,dic,sentimento)
+  
+#Junção dos dicionários
+dicionario<-dicionariox_oplexicon %>% 
+  full_join(dicionariox_nrc, by="word") 
+
+
+#Check da concordância dos dicionários
+dicionariox<-dicionario %>% 
+  mutate(polaridade =
+           if_else(polaridade.x==1 & polaridade.y==1, 1,
+           if_else(polaridade.x==-1 & polaridade.y==-1 ,-1,
+           if_else(polaridade.x==1 & polaridade.y==0, 1,
+           if_else(polaridade.x==0 & polaridade.y==1, 1,  
+           if_else(polaridade.x==-1 & polaridade.y==0, -1,
+           if_else(polaridade.x==0 & polaridade.y==-1, -1,        
+            0))))))) %>% 
+  mutate(sentimento=recode(polaridade,
+                           `-1`="negativo",
+                           `1`="positivo",
+                           `0`="neutro"))
+  
+#Verificando a classificação
+#with(teste,table(sinal,polaridade.x))
+
+#Junção da base com o dicionário
+palavra814_sentimento<-palavra.basica %>% 
+  left_join(dicionariox,
+            by=c("palavra"="word")) %>% 
+  select(palavra,polaridade,sentimento)
+
+table(palavra814_sentimento$sentimento)
+  
+```
+
+
+### Densidade - Escore de sentimento
+A polaridade com valores negativos indica que os sentimentos foram negativos. A polaridade com valores positivos indica que os sentimentos foram positivos. 
+
+```{r}
+# Desidade expírica kernel do escore de sentimento.
+ggplot(palavra280_sentimento_Syu, aes(x = polaridade)) +
+    geom_density(fill = "orange", alpha = 0.25) +
+    geom_rug() +
+    labs(x = "Polaridade", y = "Densidade")
+
+
+```
+
+```{r palavrase/sentimento}
+
+# Determina as frequências dos termos de polaridade não nula.
+# Atenção: o arquivo fica com um n menor que 54 devido as palavras 
+# repetidas
+tb_words <- palavra280_sentimento_Syu %>%
+  mutate(sentimento= recode(polaridade, "1" ="Positivo",
+                                         "-1"="Negativo",
+                                          "0"= "Neutro")) %>% 
+  filter(complete.cases(polaridade))%>%
+count(palavra, sentimento, sort = TRUE) %>% 
+  select(sentimento,palavra,n)
+ 
+```
+
+
+### Palavras - Sentimento Positivo
+
+```{r pos}
+tb_words %>% 
+  filter(sentimento == "Positivo") %>% 
+  select(palavra,n) %>% 
+   kable() %>% 
+  kable_paper(bootstrap_options = "striped", full_width = F)
+  
+  
+```
+
+
+### Palavras - Sentimento Negativo
+
+```{r}
+tb_words %>% 
+  filter(sentimento == "Negativo") %>% 
+select(palavra,n) %>% 
+   kable() %>% 
+  kable_paper(bootstrap_options = "striped", full_width = F)
+  
+  
+```
+
+
+# Positivo x Negativo
+  
+```{r}
+### Posisitivo x Negativo
+filtro<-tb_words  %>% 
+  filter(sentimento == "Positivo") %>% 
+        summarise(Quantidade = n())
+
+gauge(filtro$Quantidade[1], min = 0, max = 50, gaugeSectors(
+  success = c(41, 50), warning = c(21, 40), danger = c(0, 20)
+), label = "Positivo")
+
+filtro<-tb_words  %>% 
+  filter(sentimento == "Negativo") %>% 
+        summarise(Quantidade = n())
+
+gauge(filtro$Quantidade[1], min = 0, max = 50, gaugeSectors(
+  success = c(41, 50), warning = c(21, 40), danger = c(0, 20)
+), label = "Negativo")
+
+
+```
+
+
+
+
+
