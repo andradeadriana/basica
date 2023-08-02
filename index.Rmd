@@ -111,7 +111,7 @@ palavra.basica %>%
   mutate(palavra=reorder(palavra,n)) %>% 
   slice_head(n=10) %>% 
   ggplot()+
-  geom_col(aes(x=n,y=palavra), col="green", fill="green")+
+  geom_col(aes(x=n,y=palavra), col="green", fill="orange")+
   labs(y="Palavra",
        x="n",
        title = "Top 10 - Palavras mais mencionadas")+
